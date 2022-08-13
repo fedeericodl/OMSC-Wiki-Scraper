@@ -3,13 +3,14 @@
 	"version": "1.0.0",
 	"description": "Includes a script that generates lists for statistical purposes",
 	"main": "index.js",
+	"private": true,
 	"scripts": {
 		"start": "node .",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix"
 	},
 	"author": "FedeIlLeone",
-	"license": "MIT",
+	"license": "UNLICENSED",
 	"dependencies": {
 		"cheerio": "^1.0.0-rc.12",
 		"country-emoji": "^1.5.6",
