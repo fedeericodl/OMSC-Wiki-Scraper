@@ -1,4 +1,4 @@
-const fetch = require("node-fetch");
+const { fetch } = require("undici");
 
 module.exports = {
 	async request() {
@@ -12,7 +12,7 @@ module.exports = {
 				response = await fetch(url).then((res) => res.text());
 			} catch (error) {
 				console.error("Request failed", error);
-				return null;
+				continue;
 			}
 			responses.push(response);
 		}
