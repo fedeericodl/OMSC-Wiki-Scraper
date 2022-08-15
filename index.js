@@ -112,6 +112,7 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 		let totalPlace = 0;
 		let count = 0;
 		let averagePlace = 0;
+		let qRate = 0;
 
 		array.forEach((column) => {
 			if (!column["GF Points"] && !column["SF Points"]) return;
@@ -122,6 +123,7 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 			}
 		});
 		averagePlace = Math.round((totalPlace / count) * 10) / 10;
+		qRate = Math.round((count / countTotal) * 100 * 10) / 10;
 
 		const index = tablesMembers.indexOf(array);
 		const member = members[index][0];
@@ -131,7 +133,7 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 		if (countTotal === 15 || countTotal === 14)
 			console.log("New:", countTotal === 15, "\t| Next New:", countTotal === 14, `[${member}]`);
 
-		if (totalPlace !== 0) averagePlaces.set(member, [averagePlace, flagName, countTotal >= 15]);
+		if (totalPlace !== 0) averagePlaces.set(member, [averagePlace, flagName, countTotal >= 15, qRate]);
 	});
 	totalStats = new Map([...totalStats.entries()].sort((a, b) => b[1][0] - a[1][0]));
 	averageStats = new Map([...averageStats.entries()].sort((a, b) => b[1][0] - a[1][0]));
@@ -146,6 +148,7 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 		map.forEach((value, name) => {
 			const emoji = (isMembersArray ? countryEmoji.flag(value[1]) : countryEmoji.flag(name)) || "❓";
 			const isVeteran = value[2] && isMembersArray;
+			const qRate = value[3];
 
 			let diffFormat;
 			if (!isMembersArray) {
@@ -164,18 +167,31 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 			const isPodium = count <= 3 && !pointsEqual;
 
 			if (count === 1 && !pointsEqual) {
-				formattedMessage += "🥇";
+				formattedMessage += "🥇 ";
 			} else if (count === 2 && !pointsEqual) {
-				formattedMessage += "🥈";
+				formattedMessage += "🥈 ";
 			} else if (count === 3 && !pointsEqual) {
-				formattedMessage += "🥉";
+				formattedMessage += "🥉 ";
 			} else if (count > 3 || pointsEqual) {
-				formattedMessage += `${pointsEqual ? count - countEqual : count}.`;
+				formattedMessage += `${pointsEqual ? count - countEqual : count}. `;
 			}
 
-			formattedMessage += ` ${pointsEqual ? "(=) " : ""}${isPodium ? "**" : ""}${emoji} ${name}${
-				isVeteran ? " (Veteran)" : ""
-			} - ${value}${isMembersArray ? "" : " points"}${diffFormat ? diffFormat : ""}${isPodium ? "**" : ""}\n`;
+			if (pointsEqual) formattedMessage += "(=) ";
+			if (isPodium) formattedMessage += "**";
+
+			formattedMessage += `${emoji} ${name} `;
+
+			if (isVeteran) formattedMessage += ":ServerVerifiedDark: ";
+
+			formattedMessage += `- ${value} `;
+
+			if (!isMembersArray) formattedMessage += "points";
+			else formattedMessage += `(Q. ${qRate}%)`;
+
+			if (diffFormat) formattedMessage += diffFormat;
+
+			if (isPodium) formattedMessage += "**";
+			formattedMessage += "\n";
 
 			countEqual += pointsEqual ? 1 : 0;
 			countEqual = (nextPoints && nextPoints[0]) === value ? countEqual : 0;
