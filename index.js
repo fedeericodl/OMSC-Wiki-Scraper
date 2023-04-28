@@ -181,12 +181,13 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 
 			formattedMessage += `${emoji} ${name} `;
 
-			if (isVeteran) formattedMessage += ":ServerVerifiedDark: ";
+			if (isVeteran) formattedMessage += ":verified: ";
 
 			formattedMessage += `- ${value} `;
 
 			if (!isMembersArray) formattedMessage += "points";
-			else formattedMessage += `(Q. ${qRate}%)`;
+			// TODO: fix qualification rates when last edition row is empty
+			//else formattedMessage += `(Q. ${qRate}%)`;
 
 			if (diffFormat) formattedMessage += diffFormat;
 
@@ -202,13 +203,13 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 		return formattedMessage;
 	}
 
-	const [allTimeGFResults, averageFinal, averageMembers] = [
+	const [allTimeResults, averageFinal, averageMembers] = [
 		formatMessage(totalStats),
 		formatMessage(averageStats),
 		formatMessage(averagePlaces, true)
 	];
 
-	fs.writeFileSync("./dist/all-time-grand-final-results.txt", allTimeGFResults);
+	fs.writeFileSync("./dist/all-time-results.txt", allTimeResults);
 	fs.writeFileSync("./dist/average-scores-final.txt", averageFinal);
 	fs.writeFileSync("./dist/average-scores-members.txt", averageMembers);
 })();
