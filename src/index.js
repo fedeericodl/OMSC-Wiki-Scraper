@@ -148,7 +148,7 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 		map.forEach((value, name) => {
 			const emoji = (isMembersArray ? countryEmoji.flag(value[1]) : countryEmoji.flag(name)) || "❓";
 			const isVeteran = value[2] && isMembersArray;
-			const qRate = value[3];
+			//const qRate = value[3];
 
 			let diffFormat;
 			if (!isMembersArray) {
