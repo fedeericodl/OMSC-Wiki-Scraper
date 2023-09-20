@@ -2,7 +2,7 @@
 	"name": "omsc-wiki-scraper",
 	"version": "1.0.0",
 	"description": "Includes a script that generates lists for statistical purposes",
-	"main": "index.js",
+	"main": "src/index.js",
 	"private": true,
 	"scripts": {
 		"start": "node .",
@@ -14,13 +14,13 @@
 	"dependencies": {
 		"cheerio": "^1.0.0-rc.12",
 		"country-emoji": "^1.5.6",
-		"tabletojson": "^2.0.7",
-		"undici": "^5.22.1"
+		"tabletojson": "^2.1.1",
+		"undici": "^5.25.0"
 	},
 	"devDependencies": {
-		"eslint": "^8.45.0",
-		"eslint-config-prettier": "^8.8.0",
+		"eslint": "^8.49.0",
+		"eslint-config-prettier": "^9.0.0",
 		"eslint-plugin-prettier": "^5.0.0",
-		"prettier": "^3.0.0"
+		"prettier": "^3.0.3"
 	}
 }

@@ -7,7 +7,8 @@ const { request } = require("./utils");
 const BASE_URL = "https://onlinemusicsongcontest.miraheze.org/wiki/";
 const COUNTRIES_WIKI_A = "List_of_countries_in_the_Online_Music_Song_Contest_(A-L)";
 const COUNTRIES_WIKI_B = "List_of_countries_in_the_Online_Music_Song_Contest_(M-Z)";
-const MEMBERS_WIKI = "List_of_members_in_the_Online_Music_Song_Contest";
+const MEMBERS_WIKI_A = "List_of_members_in_the_Online_Music_Song_Contest_(A-L)";
+const MEMBERS_WIKI_B = "List_of_members_in_the_Online_Music_Song_Contest_(M-Z)";
 
 let currentEdition;
 if (process.argv[2]?.startsWith("-edition:") && process.argv[2]?.length >= 10) {
@@ -19,10 +20,11 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 });
 
 (async () => {
-	const [websourceCountriesA, websourceCountriesB, websourceMembers] = await request(
+	const [websourceCountriesA, websourceCountriesB, websourceMembersA, websourceMembersB] = await request(
 		BASE_URL + COUNTRIES_WIKI_A,
 		BASE_URL + COUNTRIES_WIKI_B,
-		BASE_URL + MEMBERS_WIKI
+		BASE_URL + MEMBERS_WIKI_A,
+		BASE_URL + MEMBERS_WIKI_B
 	);
 
 	function extract() {
@@ -64,8 +66,15 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 		return extractedItems;
 	}
 
-	const [countriesA, countriesB, members] = extract(websourceCountriesA, websourceCountriesB, websourceMembers);
+	const [countriesA, countriesB, membersA, membersB] = extract(
+		websourceCountriesA,
+		websourceCountriesB,
+		websourceMembersA,
+		websourceMembersB
+	);
+
 	const countries = [...countriesA, ...countriesB];
+	const members = [...membersA, ...membersB];
 
 	let totalStats = new Map();
 	let averageStats = new Map();
@@ -76,7 +85,12 @@ fs.mkdir("./dist", { recursive: true }, (error) => {
 		await tabletojson.convertUrl(BASE_URL + COUNTRIES_WIKI_B)
 	];
 	const tablesCountries = [...tablesCountriesA, ...tablesCountriesB];
-	const tablesMembers = await tabletojson.convertUrl(BASE_URL + MEMBERS_WIKI);
+
+	const [tablesMembersA, tablesMembersB] = [
+		await tabletojson.convertUrl(BASE_URL + MEMBERS_WIKI_A),
+		await tabletojson.convertUrl(BASE_URL + MEMBERS_WIKI_B)
+	];
+	const tablesMembers = [...tablesMembersA, ...tablesMembersB];
 
 	tablesCountries.forEach((array) => {
 		const filteredArray = array.filter((column) => !column.Points.match(/[^0-9.]/g) && parseInt(column.Points));
