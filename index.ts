@@ -15,9 +15,9 @@ const WIKI_PAGES = {
     MEMBERS_B: "List_of_members_in_the_Online_Music_Song_Contest_(M-Z)",
 };
 
-const parser = yargs(hideBin(process.argv)).options({
+const argv = yargs(hideBin(process.argv)).options({
     currentEdition: { type: "number" },
-});
+}).parseSync();
 
 fs.mkdirSync("./dist", { recursive: true });
 
@@ -175,7 +175,7 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
     return formattedMessage;
 }
 
-type TableCountriesHeadings = "Edition" | "Country" | "Artist(s)" | "Song" | "Language" | "Place" | "Points";
+type TableCountriesHeadings = "Edition" | "Artist(s)" | "Song" | "Language" | "Place" | "Points";
 type TableMembersHeadings =
     | "Edition"
     | "Country"
@@ -191,8 +191,6 @@ type TableMembersHeadings =
  * Process and save results.
  */
 async function processResults() {
-    const argv = await parser.parse();
-
     const urls = [
         BASE_URL + WIKI_PAGES.COUNTRIES_A,
         BASE_URL + WIKI_PAGES.COUNTRIES_B,
@@ -222,21 +220,25 @@ async function processResults() {
 
     // Process country stats
     tablesCountries.forEach((array) => {
-        const filteredArray = array.filter((column) => !column.Points.match(/[^0-9.]/g) && parseInt(column.Points));
-        let count = filteredArray.length;
+        const filteredArray = array.filter((column) => {
+            const editionNumber = extractEditionNumber(column.Edition);
+            return (
+                editionNumber !== null &&
+                editionNumber <= (argv.currentEdition || Infinity) &&
+                !column.Points.match(/[^0-9.]/g) &&
+                parseInt(column.Points)
+            );
+        });
 
         let totalPoints = 0;
         let averagePoints = 0;
 
         filteredArray.forEach((column) => {
-            if (argv.currentEdition && column.Edition.includes(argv.currentEdition.toString())) {
-                count--;
-                return;
-            }
             const points = parseInt(column.Points);
             totalPoints += points;
         });
-        averagePoints = Math.round((totalPoints / count) * 10) / 10;
+
+        averagePoints = Math.round((totalPoints / filteredArray.length) * 10) / 10;
 
         const index = tablesCountries.indexOf(array);
         const country = countries[index]?.[0] || "Unknown";
@@ -249,35 +251,42 @@ async function processResults() {
 
     // Process member stats
     tablesMembers.forEach((array) => {
-        let countTotal = array.length;
+        const filteredArray = array.filter((column) => {
+            const editionNumber = extractEditionNumber(column.Edition);
+            return (
+                editionNumber !== null &&
+                editionNumber <= (argv.currentEdition || Infinity) &&
+                (column["GF Points"] || column["SF Points"])
+            );
+        });
 
         let totalPlace = 0;
         let count = 0;
         let averagePlace = 0;
 
-        array.forEach((column) => {
-            if (!column["GF Points"] && !column["SF Points"]) return;
-            if (argv.currentEdition && column.Edition.includes(argv.currentEdition.toString())) {
-                countTotal--;
-                return;
-            }
+        filteredArray.forEach((column) => {
             const place = parseInt(column["GF Place"]);
             if (place) {
                 totalPlace += place;
                 count++;
             }
         });
+
         averagePlace = Math.round((totalPlace / count) * 10) / 10;
 
         const index = tablesMembers.indexOf(array);
         const member = members[index]?.[0] || "Unknown";
         const flagName = members[index]?.[1] || "Unknown";
 
+        const countTotal = filteredArray.length;
+
         // Get new and next veterans
         if (countTotal === 15 || countTotal === 14)
             console.log("New:", countTotal === 15, "\t| Next New:", countTotal === 14, `[${member}]`);
 
-        if (totalPlace !== 0) averagePlaces.set(member, [averagePlace, flagName, countTotal >= 15]);
+        if (totalPlace !== 0) {
+            averagePlaces.set(member, [averagePlace, flagName, countTotal >= 15]);
+        }
     });
 
     // Sort maps
