@@ -175,6 +175,16 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
     return formattedMessage;
 }
 
+/**
+ * Extracts edition number from a string.
+ * @param edition Edition string.
+ * @returns Edition number.
+ */
+function extractEditionNumber(edition: string) {
+    const match = edition.match(/\d+/);
+    return match ? parseInt(match[0], 10) : null;
+}
+
 type TableCountriesHeadings = "Edition" | "Artist(s)" | "Song" | "Language" | "Place" | "Points";
 type TableMembersHeadings =
     | "Edition"
