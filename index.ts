@@ -15,9 +15,11 @@ const WIKI_PAGES = {
     MEMBERS_B: "List_of_members_in_the_Online_Music_Song_Contest_(M-Z)",
 };
 
-const argv = yargs(hideBin(process.argv)).options({
-    currentEdition: { type: "number" },
-}).parseSync();
+const argv = yargs(hideBin(process.argv))
+    .options({
+        currentEdition: { type: "number" },
+    })
+    .parseSync();
 
 fs.mkdirSync("./dist", { recursive: true });
 
