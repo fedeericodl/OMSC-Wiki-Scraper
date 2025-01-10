@@ -1,26 +1,38 @@
 {
-	"name": "omsc-wiki-scraper",
-	"version": "1.0.0",
-	"description": "Includes a script that generates lists for statistical purposes",
-	"main": "src/index.js",
-	"private": true,
-	"scripts": {
-		"start": "node .",
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix"
-	},
-	"author": "FedeIlLeone",
-	"license": "UNLICENSED",
-	"dependencies": {
-		"cheerio": "^1.0.0-rc.12",
-		"country-emoji": "^1.5.6",
-		"tabletojson": "^2.1.1",
-		"undici": "^5.25.0"
-	},
-	"devDependencies": {
-		"eslint": "^8.49.0",
-		"eslint-config-prettier": "^9.0.0",
-		"eslint-plugin-prettier": "^5.0.0",
-		"prettier": "^3.0.3"
-	}
+    "name": "omsc-wiki-scraper",
+    "version": "2.0.0",
+    "description": "Includes a script that generates lists for statistical purposes",
+    "main": "index.ts",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "start": "tsx .",
+        "prettier:check": "prettier . --check",
+        "eslint:check": "eslint .",
+        "typescript:check": "tsc --noEmit",
+        "prettier:fix": "prettier . --write",
+        "eslint:fix": "eslint . --fix",
+        "lint": "pnpm run prettier:check && pnpm run eslint:check && pnpm run typescript:check",
+        "lint:fix": "pnpm run prettier:fix && pnpm run eslint:fix && pnpm run typescript:check"
+    },
+    "author": "FedeIlLeone",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "cheerio": "^1.0.0",
+        "country-emoji": "^1.5.6",
+        "tabletojson": "^4.1.5",
+        "yargs": "^17.7.2"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.17.0",
+        "@types/node": "^22.10.5",
+        "@types/yargs": "^17.0.33",
+        "eslint": "^9.17.0",
+        "eslint-config-prettier": "^9.1.0",
+        "globals": "^15.14.0",
+        "prettier": "^3.4.2",
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.3",
+        "typescript-eslint": "^8.19.1"
+    }
 }
