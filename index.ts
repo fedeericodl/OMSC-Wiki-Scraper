@@ -187,6 +187,73 @@ function extractEditionNumber(edition: string) {
     return match ? parseInt(match[0], 10) : null;
 }
 
+/**
+ * Process and format the last participation data for all countries.
+ * @param countries List of countries from the extracted data.
+ * @param tablesCountries Parsed table data containing edition information.
+ * @returns Formatted plain text output, sorted alphabetically by country name.
+ */
+function processLastParticipation(
+    countries: [string, string][],
+    tablesCountries: Record<TableCountriesHeadings, string>[][],
+) {
+    const lastParticipation = new Map<string, number>();
+    let currentEdition = argv.currentEdition || 0;
+
+    // Determine the current edition based on the highest edition number in the data
+    if (!argv.currentEdition) {
+        tablesCountries.forEach((array) => {
+            array.forEach((column) => {
+                const editionNumber = extractEditionNumber(column.Edition);
+                if (editionNumber && editionNumber > currentEdition) {
+                    currentEdition = editionNumber;
+                }
+            });
+        });
+    }
+
+    countries.forEach(([country]) => {
+        let lastEdition = 0;
+
+        tablesCountries.forEach((array) => {
+            array.forEach((column) => {
+                const editionNumber = extractEditionNumber(column.Edition);
+                const index = tablesCountries.indexOf(array);
+                const selectedCountry = countries[index]?.[0] || "Unknown";
+                if (editionNumber && selectedCountry === country && editionNumber > lastEdition) {
+                    lastEdition = editionNumber;
+                }
+            });
+        });
+
+        lastParticipation.set(country, lastEdition);
+    });
+
+    return formatParticipationData(lastParticipation, currentEdition);
+}
+
+/**
+ * Format country participation data for output.
+ * @param lastParticipation Map of countries to their last participation edition.
+ * @param currentEdition The current edition number.
+ * @returns Formatted plain text output, sorted alphabetically by country name.
+ */
+function formatParticipationData(lastParticipation: Map<string, number>, currentEdition: number) {
+    let formattedMessage = "";
+
+    // Sort the map entries by country name
+    const sortedEntries = [...lastParticipation.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+    sortedEntries.forEach(([country, lastEdition]) => {
+        const editionsMissed = currentEdition - lastEdition;
+        const emoji = getFlag(country);
+        const isCurrent = currentEdition === lastEdition;
+        formattedMessage += `${emoji} ${isCurrent ? "**" : ""}${country} ${lastEdition} ${editionsMissed !== 0 ? `(+${editionsMissed})` : ""}${isCurrent ? "**" : ""}\n`;
+    });
+
+    return formattedMessage;
+}
+
 type TableCountriesHeadings = "Edition" | "Artist(s)" | "Song" | "Language" | "Place" | "Points";
 type TableMembersHeadings =
     | "Edition"
@@ -310,6 +377,7 @@ async function processResults() {
     fs.writeFileSync("./dist/all-time-results.txt", formatMessage(totalStats));
     fs.writeFileSync("./dist/average-scores-final.txt", formatMessage(averageStats));
     fs.writeFileSync("./dist/average-scores-members.txt", formatMessage(averagePlaces, true));
+    fs.writeFileSync("./dist/last-countries-participations.txt", processLastParticipation(countries, tablesCountries));
 }
 
 processResults().catch((error) => console.error("Error processing results:", error));
