@@ -220,7 +220,13 @@ function processLastParticipation(
                 const editionNumber = extractEditionNumber(column.Edition);
                 const index = tablesCountries.indexOf(array);
                 const selectedCountry = countries[index]?.[0] || "Unknown";
-                if (editionNumber && selectedCountry === country && editionNumber > lastEdition) {
+                // Only consider editions up to the current edition
+                if (
+                    editionNumber &&
+                    editionNumber <= currentEdition &&
+                    selectedCountry === country &&
+                    editionNumber > lastEdition
+                ) {
                     lastEdition = editionNumber;
                 }
             });
@@ -236,13 +242,17 @@ function processLastParticipation(
  * Format country participation data for output.
  * @param lastParticipation Map of countries to their last participation edition.
  * @param currentEdition The current edition number.
- * @returns Formatted plain text output, sorted alphabetically by country name.
+ * @returns Formatted plain text output, sorted by most editions missed.
  */
 function formatParticipationData(lastParticipation: Map<string, number>, currentEdition: number) {
     let formattedMessage = "";
 
-    // Sort the map entries by country name
-    const sortedEntries = [...lastParticipation.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    // Sort the map entries by editions missed (in descending order)
+    const sortedEntries = [...lastParticipation.entries()].sort((a, b) => {
+        const missedA = currentEdition - a[1];
+        const missedB = currentEdition - b[1];
+        return missedB - missedA;
+    });
 
     sortedEntries.forEach(([country, lastEdition]) => {
         const editionsMissed = currentEdition - lastEdition;
