@@ -28,7 +28,7 @@ fs.mkdirSync("./dist", { recursive: true });
  * @param urls URLs to fetch content from.
  * @returns Promise containing the fetched content.
  */
-async function fetchContent(urls: string[]): Promise<string[]> {
+async function fetchContent(urls: string[]) {
     try {
         return await Promise.all(
             urls.map(async (url) => {
@@ -48,7 +48,7 @@ async function fetchContent(urls: string[]): Promise<string[]> {
  * @param websources Web sources to extract data from.
  * @returns Extracted data.
  */
-function extractData(websources: string[]): Array<[string, string][]> {
+function extractData(websources: string[]) {
     return websources.map((websource) => {
         const $ = cheerio.load(websource);
         const extracted: [string, string][] = [];
@@ -63,7 +63,7 @@ function extractData(websources: string[]): Array<[string, string][]> {
                     .attr("src")
                     ?.match(/\/Flag(.+?)\//)?.[1]
                     ?.replace(".png", "")
-                    ?.replace(/_/g, " ") || "",
+                    .replace(/_/g, " ") ?? "",
             );
 
             const entry = parentText.replace("•  ", "").replace(/\n/g, "").trim();
@@ -98,10 +98,10 @@ function extractData(websources: string[]): Array<[string, string][]> {
  * @param filePath Path to the file.
  * @returns Flag overrides.
  */
-function readFlagOverrides(filePath: string): Record<string, string> {
+function readFlagOverrides(filePath: string) {
     if (fs.existsSync(filePath)) {
         const data = fs.readFileSync(filePath, "utf-8");
-        return JSON.parse(data);
+        return JSON.parse(data) as Record<string, string>;
     }
     return {};
 }
@@ -115,7 +115,7 @@ const flagOverrides = readFlagOverrides(flagOverridesPath);
  * @returns Flag emoji.
  */
 function getFlag(name: string) {
-    return flagOverrides[name] || flag(name) || "❓";
+    return flagOverrides[name] ?? flag(name) ?? "❓";
 }
 
 type CountriesMapValue = [number];
@@ -141,7 +141,7 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
         const nextIndex = Array.from(map.keys()).indexOf(name) + 1;
         const nextCountry = Array.from(map.keys())[nextIndex];
         const nextPoints = nextCountry ? map.get(nextCountry) : undefined;
-        const pointsEqual = (nextPoints && nextPoints[0]) === points || previousPoints === points;
+        const pointsEqual = nextPoints?.[0] === points || previousPoints === points;
         const isPodium = rank <= 3 && !pointsEqual;
 
         if (rank === 1 && !pointsEqual) {
@@ -151,7 +151,7 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
         } else if (rank === 3 && !pointsEqual) {
             formattedMessage += "🥉 ";
         } else if (rank > 3 || pointsEqual) {
-            formattedMessage += `${pointsEqual ? `${rank - tieCount}\\` : rank}. `;
+            formattedMessage += `${pointsEqual ? `${String(rank - tieCount)}\\` : rank.toString()}. `;
         }
 
         if (pointsEqual) formattedMessage += "(=) ";
@@ -161,7 +161,7 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
 
         if (isVeteran) formattedMessage += ":verified: ";
 
-        formattedMessage += `- ${points} `;
+        formattedMessage += `- ${points.toString()} `;
 
         if (!isMembersArray) formattedMessage += "points";
 
@@ -169,7 +169,7 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
         formattedMessage += "\n";
 
         tieCount += pointsEqual ? 1 : 0;
-        tieCount = (nextPoints && nextPoints[0]) === points ? tieCount : 0;
+        tieCount = nextPoints?.[0] === points ? tieCount : 0;
         previousPoints = points;
         rank++;
     });
@@ -183,7 +183,7 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
  * @returns Edition number.
  */
 function extractEditionNumber(edition: string) {
-    const match = edition.match(/\d+/);
+    const match = /\d+/.exec(edition);
     return match ? parseInt(match[0], 10) : null;
 }
 
@@ -198,7 +198,7 @@ function processLastParticipation(
     tablesCountries: Record<TableCountriesHeadings, string>[][],
 ) {
     const lastParticipation = new Map<string, number>();
-    let currentEdition = argv.currentEdition || 0;
+    let currentEdition = argv.currentEdition ?? 0;
 
     // Determine the current edition based on the highest edition number in the data
     if (!argv.currentEdition) {
@@ -219,7 +219,7 @@ function processLastParticipation(
             array.forEach((column) => {
                 const editionNumber = extractEditionNumber(column.Edition);
                 const index = tablesCountries.indexOf(array);
-                const selectedCountry = countries[index]?.[0] || "Unknown";
+                const selectedCountry = countries[index]?.[0] ?? "Unknown";
                 // Only consider editions up to the current edition
                 if (
                     editionNumber &&
@@ -258,7 +258,7 @@ function formatParticipationData(lastParticipation: Map<string, number>, current
         const editionsMissed = currentEdition - lastEdition;
         const emoji = getFlag(country);
         const isCurrent = currentEdition === lastEdition;
-        formattedMessage += `${emoji} ${isCurrent ? "**" : ""}${country} ${lastEdition} ${editionsMissed !== 0 ? `(+${editionsMissed})` : ""}${isCurrent ? "**" : ""}\n`;
+        formattedMessage += `${emoji} ${isCurrent ? "**" : ""}${country} ${lastEdition.toString()} ${editionsMissed !== 0 ? `(+${editionsMissed.toString()})` : ""}${isCurrent ? "**" : ""}\n`;
     });
 
     return formattedMessage;
@@ -293,6 +293,7 @@ async function processResults() {
     const countries = [...countriesA, ...countriesB];
     const members = [...membersA, ...membersB];
 
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const tablesCountries: Record<TableCountriesHeadings, string>[][] = [
         ...(await tabletojson.convertUrl(BASE_URL + WIKI_PAGES.COUNTRIES_A)),
         ...(await tabletojson.convertUrl(BASE_URL + WIKI_PAGES.COUNTRIES_B)),
@@ -302,6 +303,7 @@ async function processResults() {
         ...(await tabletojson.convertUrl(BASE_URL + WIKI_PAGES.MEMBERS_A)),
         ...(await tabletojson.convertUrl(BASE_URL + WIKI_PAGES.MEMBERS_B)),
     ];
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
     let totalStats = new Map<string, CountriesMapValue>(); // [totalPoints]
     let averageStats = new Map<string, CountriesMapValue>(); // [averagePoints]
@@ -313,7 +315,7 @@ async function processResults() {
             const editionNumber = extractEditionNumber(column.Edition);
             return (
                 editionNumber !== null &&
-                editionNumber <= (argv.currentEdition || Infinity) &&
+                editionNumber <= (argv.currentEdition ?? Infinity) &&
                 !column.Points.match(/[^0-9.]/g) &&
                 parseInt(column.Points)
             );
@@ -330,7 +332,7 @@ async function processResults() {
         averagePoints = Math.round((totalPoints / filteredArray.length) * 10) / 10;
 
         const index = tablesCountries.indexOf(array);
-        const country = countries[index]?.[0] || "Unknown";
+        const country = countries[index]?.[0] ?? "Unknown";
 
         if (totalPoints !== 0) {
             totalStats.set(country, [totalPoints]);
@@ -344,7 +346,7 @@ async function processResults() {
             const editionNumber = extractEditionNumber(column.Edition);
             return (
                 editionNumber !== null &&
-                editionNumber <= (argv.currentEdition || Infinity) &&
+                editionNumber <= (argv.currentEdition ?? Infinity) &&
                 (column["GF Points"] || column["SF Points"])
             );
         });
@@ -364,8 +366,8 @@ async function processResults() {
         averagePlace = Math.round((totalPlace / count) * 10) / 10;
 
         const index = tablesMembers.indexOf(array);
-        const member = members[index]?.[0] || "Unknown";
-        const flagName = members[index]?.[1] || "Unknown";
+        const member = members[index]?.[0] ?? "Unknown";
+        const flagName = members[index]?.[1] ?? "Unknown";
 
         const countTotal = filteredArray.length;
 
@@ -390,4 +392,6 @@ async function processResults() {
     fs.writeFileSync("./dist/last-countries-participations.txt", processLastParticipation(countries, tablesCountries));
 }
 
-processResults().catch((error) => console.error("Error processing results:", error));
+processResults().catch((error: unknown) => {
+    console.error("Error processing results:", error);
+});

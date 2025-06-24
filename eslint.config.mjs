@@ -1,13 +1,21 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
+import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
-    { files: ["**/*.{js,mjs,cjs,ts}"] },
-    { languageOptions: { globals: globals.node } },
-    pluginJs.configs.recommended,
-    ...tseslint.configs.recommended,
+export default tseslint.config(
+    eslint.configs.recommended,
     eslintConfigPrettier,
-];
+    tseslint.configs.strictTypeChecked,
+    tseslint.configs.stylisticTypeChecked,
+    {
+        name: "base",
+        languageOptions: {
+            globals: globals.node,
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+    },
+);

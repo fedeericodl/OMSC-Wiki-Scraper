@@ -17,8 +17,5 @@
         "module": "preserve",
         "noEmit": true,
         "lib": ["es2022"]
-    },
-    // Include the necessary files for your project
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules"]
+    }
 }
