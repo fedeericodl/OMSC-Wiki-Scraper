@@ -119,7 +119,7 @@ function getFlag(name: string) {
 }
 
 type CountriesMapValue = [number];
-type MembersMapValue = [number, string, boolean];
+type MembersMapValue = [number, string];
 
 /**
  * Format data for output.
@@ -135,7 +135,6 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
 
     map.forEach((value, name) => {
         const emoji = getFlag(isMembersArray ? (value[1] ?? "") : name);
-        const isVeteran = value[2] && isMembersArray;
         const points = value[0];
 
         const nextIndex = Array.from(map.keys()).indexOf(name) + 1;
@@ -158,8 +157,6 @@ function formatMessage(map: Map<string, CountriesMapValue | MembersMapValue>, is
         if (isPodium) formattedMessage += "**";
 
         formattedMessage += `${emoji} ${name} `;
-
-        if (isVeteran) formattedMessage += ":verified: ";
 
         formattedMessage += `- ${points.toString()} `;
 
@@ -307,7 +304,7 @@ async function processResults() {
 
     let totalStats = new Map<string, CountriesMapValue>(); // [totalPoints]
     let averageStats = new Map<string, CountriesMapValue>(); // [averagePoints]
-    let averagePlaces = new Map<string, MembersMapValue>(); // [averagePlace, flagName, isVeteran]
+    let averagePlaces = new Map<string, MembersMapValue>(); // [averagePlace, flagName]
 
     // Process country stats
     tablesCountries.forEach((array) => {
@@ -369,14 +366,14 @@ async function processResults() {
         const member = members[index]?.[0] ?? "Unknown";
         const flagName = members[index]?.[1] ?? "Unknown";
 
-        const countTotal = filteredArray.length;
+        const countTotal = array.length;
 
-        // Get new and next veterans
-        if (countTotal === 15 || countTotal === 14)
-            console.log("New:", countTotal === 15, "\t| Next New:", countTotal === 14, `[${member}]`);
+        // Get new veterans and established members
+        if (countTotal === 50) console.log("\x1b[36mVeteran:\x1b[0m", countTotal, `[${member}]`);
+        else if (countTotal === 25) console.log("\x1b[32mEstablished:\x1b[0m", countTotal, `[${member}]`);
 
         if (totalPlace !== 0) {
-            averagePlaces.set(member, [averagePlace, flagName, countTotal >= 15]);
+            averagePlaces.set(member, [averagePlace, flagName]);
         }
     });
 
