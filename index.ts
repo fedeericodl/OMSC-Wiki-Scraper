@@ -14,10 +14,13 @@ const WIKI_PAGES = {
     MEMBERS_A: "List_of_members_in_the_Online_Music_Song_Contest_(A-L)",
     MEMBERS_B: "List_of_members_in_the_Online_Music_Song_Contest_(M-Z)",
 };
+const VETERAN_PARTICIPATIONS = 50;
+const ESTABLISHED_PARTICIPATIONS = 25;
+const MEMBERS_MINIMUM_PARTICIPATIONS = 5;
 
 const argv = yargs(hideBin(process.argv))
     .options({
-        currentEdition: { type: "number" },
+        edition: { type: "number" },
     })
     .parseSync();
 
@@ -90,7 +93,7 @@ function extractData(websources: string[]) {
     });
 }
 
-// TODO: Remove flag overrides when country-flags package is updated to v2
+// TODO: Remove flag overrides when country-emoji package is updated to v2
 // This should fix issues with not getting the correct flag for some countries
 
 /**
@@ -195,15 +198,15 @@ function processLastParticipation(
     tablesCountries: Record<TableCountriesHeadings, string>[][],
 ) {
     const lastParticipation = new Map<string, number>();
-    let currentEdition = argv.currentEdition ?? 0;
+    let edition = argv.edition ?? 0;
 
     // Determine the current edition based on the highest edition number in the data
-    if (!argv.currentEdition) {
+    if (!argv.edition) {
         tablesCountries.forEach((array) => {
             array.forEach((column) => {
                 const editionNumber = extractEditionNumber(column.Edition);
-                if (editionNumber && editionNumber > currentEdition) {
-                    currentEdition = editionNumber;
+                if (editionNumber && editionNumber > edition) {
+                    edition = editionNumber;
                 }
             });
         });
@@ -220,7 +223,7 @@ function processLastParticipation(
                 // Only consider editions up to the current edition
                 if (
                     editionNumber &&
-                    editionNumber <= currentEdition &&
+                    editionNumber <= edition &&
                     selectedCountry === country &&
                     editionNumber > lastEdition
                 ) {
@@ -232,29 +235,29 @@ function processLastParticipation(
         lastParticipation.set(country, lastEdition);
     });
 
-    return formatParticipationData(lastParticipation, currentEdition);
+    return formatParticipationData(lastParticipation, edition);
 }
 
 /**
  * Format country participation data for output.
  * @param lastParticipation Map of countries to their last participation edition.
- * @param currentEdition The current edition number.
+ * @param edition The current edition number.
  * @returns Formatted plain text output, sorted by most editions missed.
  */
-function formatParticipationData(lastParticipation: Map<string, number>, currentEdition: number) {
+function formatParticipationData(lastParticipation: Map<string, number>, edition: number) {
     let formattedMessage = "";
 
     // Sort the map entries by editions missed (in descending order)
     const sortedEntries = [...lastParticipation.entries()].sort((a, b) => {
-        const missedA = currentEdition - a[1];
-        const missedB = currentEdition - b[1];
+        const missedA = edition - a[1];
+        const missedB = edition - b[1];
         return missedB - missedA;
     });
 
     sortedEntries.forEach(([country, lastEdition]) => {
-        const editionsMissed = currentEdition - lastEdition;
+        const editionsMissed = edition - lastEdition;
         const emoji = getFlag(country);
-        const isCurrent = currentEdition === lastEdition;
+        const isCurrent = edition === lastEdition;
         formattedMessage += `${emoji} ${isCurrent ? "**" : ""}${country} ${lastEdition.toString()} ${editionsMissed !== 0 ? `(+${editionsMissed.toString()})` : ""}${isCurrent ? "**" : ""}\n`;
     });
 
@@ -312,7 +315,7 @@ async function processResults() {
             const editionNumber = extractEditionNumber(column.Edition);
             return (
                 editionNumber !== null &&
-                editionNumber <= (argv.currentEdition ?? Infinity) &&
+                editionNumber <= (argv.edition ?? Infinity) &&
                 !column.Points.match(/[^0-9.]/g) &&
                 parseInt(column.Points)
             );
@@ -343,7 +346,7 @@ async function processResults() {
             const editionNumber = extractEditionNumber(column.Edition);
             return (
                 editionNumber !== null &&
-                editionNumber <= (argv.currentEdition ?? Infinity) &&
+                editionNumber <= (argv.edition ?? Infinity) &&
                 (column["GF Points"] || column["SF Points"])
             );
         });
@@ -369,10 +372,10 @@ async function processResults() {
         const countTotal = array.length;
 
         // Get new veterans and established members
-        if (countTotal === 50) console.log("\x1b[36mVeteran:\x1b[0m", countTotal, `[${member}]`);
-        else if (countTotal === 25) console.log("\x1b[32mEstablished:\x1b[0m", countTotal, `[${member}]`);
+        if (countTotal === VETERAN_PARTICIPATIONS) console.log("\x1b[36mVeteran:\x1b[0m", countTotal, `[${member}]`);
+        else if (countTotal === ESTABLISHED_PARTICIPATIONS) console.log("\x1b[32mEstablished:\x1b[0m", countTotal, `[${member}]`);
 
-        if (totalPlace !== 0) {
+        if (totalPlace !== 0 && count >= MEMBERS_MINIMUM_PARTICIPATIONS) {
             averagePlaces.set(member, [averagePlace, flagName]);
         }
     });
