@@ -373,7 +373,8 @@ async function processResults() {
 
         // Get new veterans and established members
         if (countTotal === VETERAN_PARTICIPATIONS) console.log("\x1b[36mVeteran:\x1b[0m", countTotal, `[${member}]`);
-        else if (countTotal === ESTABLISHED_PARTICIPATIONS) console.log("\x1b[32mEstablished:\x1b[0m", countTotal, `[${member}]`);
+        else if (countTotal === ESTABLISHED_PARTICIPATIONS)
+            console.log("\x1b[32mEstablished:\x1b[0m", countTotal, `[${member}]`);
 
         if (totalPlace !== 0 && count >= MEMBERS_MINIMUM_PARTICIPATIONS) {
             averagePlaces.set(member, [averagePlace, flagName]);
